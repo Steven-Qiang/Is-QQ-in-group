@@ -1,0 +1,100 @@
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取群组列表</title>
+    <link rel="stylesheet" href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/bootstrap-table/1.17.1/bootstrap-table.min.css">
+    <style>
+        h2 {
+            text-align: center;
+        }
+
+        #group-table .qlogo {
+            vertical-align: middle;
+            max-width: 30px;
+        }
+
+        #group-table .qlogo>span {
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .bootstrap-table .fixed-table-container .fixed-table-body {
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="padding:5vh">
+        <div class="main">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2>加入的群组列表</h2>
+                </div>
+                <div style="padding: 10px">
+                    <table id="group-table" class="table table-hover"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/bootstrap-table/1.17.1/bootstrap-table.min.js"></script>
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/bootstrap-table/1.17.1/locale/bootstrap-table-zh-CN.js"></script>
+    <script>
+        $(async () => {
+            const { list } = await get_group_list();
+            console.log(list);
+            $("#group-table").empty();
+            $("#group-table").bootstrapTable('destroy').bootstrapTable({
+                uniqueId: "id",
+                columns: [{
+                    field: 'gc',
+                    title: '群号码',
+                    align: 'center',
+                }, {
+                    field: 'gn',
+                    title: '群名称',
+                    align: 'center',
+                }, {
+                    title: '身份',
+                    align: 'center',
+                    field: 'roleName'
+                }, {
+                    field: 'owner',
+                    align: 'center',
+                    title: '群主',
+                    width: 200,
+                    formatter (value) {
+                        return [
+                            `<div style="text-align:left">`,
+                            `<img src="https://q1.qlogo.cn/g?b=qq&nk=${value}&s=40" class="img-circle qlogo">`,
+                            `<span style="margin-left:15px">${value}</span>`,
+                            "</div>"
+                        ].join("")
+                    }
+                }],
+                showHeader: true,
+                search: true,
+                data: list.slice(0, 8)
+            });
+        })
+
+        async function get_group_list () {
+            return $.ajax({
+                url: "/api/group-list",
+                type: "post",
+                contentType: "application/json",
+                processData: false,
+                data: localStorage.ret_ck,
+                dataType: "json"
+            })
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,109 @@
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QQ扫码登录</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+        }
+
+        .main {
+            text-align: center;
+            margin-top: 25vh;
+        }
+
+        .dotting {
+            display: inline-block;
+            min-width: 2px;
+            min-height: 2px;
+            box-shadow: 2px 0 currentColor, 6px 0 currentColor, 10px 0 currentColor;
+            animation: dot 1s infinite step-start both;
+        }
+
+        .dotting:before {
+            content: '...';
+        }
+
+        .dotting::before {
+            content: '';
+        }
+
+        :root .dotting {
+            margin-right: 8px;
+        }
+
+        @keyframes dot {
+            25% {
+                box-shadow: none;
+            }
+
+            50% {
+                box-shadow: 2px 0 currentColor;
+            }
+
+            75% {
+                box-shadow: 2px 0 currentColor, 6px 0 currentColor;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <h1>QQ扫码登录</h1>
+        <div class="code">
+            <img class="qrcode" />
+        </div>
+        <div class="message">正在获取状态<span class="dotting"></span></div>
+    </div>
+    <input type="hidden" class="qrsig">
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        let timer;
+        $(async () => {
+            const { qrsig, image } = await getQrcode();
+            $('.qrcode').attr('src', image);
+            $('.qrsig').val(qrsig);
+            if (timer) clearInterval(timer);
+
+            timer = setInterval(async () => {
+                const qrsig = $('.qrsig').val();
+                const result = await getResult(qrsig);
+                $('.message').html(result.msg);
+                if (result.code === 65) {
+                    clearInterval(timer);
+                    return;
+                }
+                if (result.code === 0) {
+                    clearInterval(timer);
+                    $('.message').html(`${result.msg},QQ: ${result.uin}, 正在跳转`);
+                    await onSuccess(result);
+                }
+            }, 3000);
+        });
+        async function onSuccess (ret) {
+            localStorage.setItem('ret_ck', JSON.stringify(ret.cookies))
+            setTimeout(() => {
+                location.href = './group.html';
+            }, 1000);
+        }
+        async function getQrcode () {
+            return jQuery
+                .ajax({
+                    url: '/api/get-qrcode',
+                    dataType: 'json',
+                });
+        }
+        async function getResult (qrsig) {
+            return jQuery.ajax({
+                url: '/api/get-result/' + qrsig,
+                dataType: 'json',
+            });
+        }
+    </script>
+</body>
+
+</html>
